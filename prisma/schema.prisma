@@ -1,0 +1,226 @@
+// IdeaPilot Prisma Schema
+// 本地开发使用 SQLite，生产环境切换为 PostgreSQL（仅需改 provider + url）
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// 1. 用户表
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String?
+  avatar       String?
+  role         Role     @default(USER)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  ideas              Idea[]
+  shares             Share[]
+  exports            Export[]
+  conversations      Conversation[]
+  developmentPrompts DevelopmentPrompt[]
+
+  @@map("users")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+// 2. 想法表（用户输入的原始想法）
+model Idea {
+  id        String     @id @default(cuid())
+  userId    String
+  rawText   String
+  title     String?
+  status    IdeaStatus @default(ANALYZED)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  analysis           AnalysisResult?
+  tags               IdeaTag[]
+  shares             Share[]
+  exports            Export[]
+  conversations      Conversation[]
+  developmentPrompts DevelopmentPrompt[]
+
+  @@index([userId])
+  @@map("ideas")
+}
+
+enum IdeaStatus {
+  DRAFT
+  ANALYZED
+  ARCHIVED
+}
+
+// 3. 分析结果表（LLM 产出的六维方案，一对一关联想法）
+model AnalysisResult {
+  id         String   @id @default(cuid())
+  ideaId     String   @unique
+  track      String
+  targetUser String
+  painPoint  String
+  mvp        String
+  demoRoute  String
+  tasks      String
+  pitch      String
+  canvas     String
+  title      String
+  tags       String
+  modelUsed  String
+  tokensUsed Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  idea Idea @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+
+  @@map("analysis_results")
+}
+
+// 4. 标签表（想法分类，多对多）
+model Tag {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  color     String
+  createdAt DateTime @default(now())
+
+  ideas IdeaTag[]
+
+  @@map("tags")
+}
+
+model IdeaTag {
+  ideaId String
+  tagId  String
+
+  idea Idea @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  tag  Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([ideaId, tagId])
+  @@map("idea_tags")
+}
+
+// 5. 分享表（生成公开分享链接）
+model Share {
+  id        String    @id @default(cuid())
+  ideaId    String
+  userId    String
+  token     String    @unique
+  expiresAt DateTime?
+  viewCount Int       @default(0)
+  createdAt DateTime  @default(now())
+
+  idea Idea @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@map("shares")
+}
+
+// 6. 导出记录表（记录用户导出历史）
+model Export {
+  id        String       @id @default(cuid())
+  ideaId    String
+  userId    String
+  format    ExportFormat
+  fileUrl   String?
+  createdAt DateTime     @default(now())
+
+  idea Idea @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("exports")
+}
+
+enum ExportFormat {
+  PDF
+  MARKDOWN
+}
+
+model Conversation {
+  id        String             @id @default(cuid())
+  ideaId    String
+  userId    String
+  title     String
+  status    ConversationStatus @default(ACTIVE)
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+
+  idea     Idea          @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages ChatMessage[]
+
+  @@index([ideaId])
+  @@index([userId])
+  @@map("conversations")
+}
+
+enum ConversationStatus {
+  ACTIVE
+  CONFIRMED
+}
+
+model ChatMessage {
+  id             String      @id @default(cuid())
+  conversationId String
+  role           MessageRole
+  kind           MessageKind @default(NORMAL)
+  content        String
+  createdAt      DateTime    @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+  @@map("chat_messages")
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+}
+
+enum MessageKind {
+  NORMAL
+  QUESTION
+  SUGGESTION
+  PROMPT
+}
+
+model DevelopmentPrompt {
+  id        String   @id @default(cuid())
+  ideaId    String
+  userId    String
+  content   String
+  version   Int      @default(1)
+  createdAt DateTime @default(now())
+
+  idea Idea @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([ideaId])
+  @@index([userId])
+  @@map("development_prompts")
+}
+
+// 7. 模板表（管理员维护的赛道模板，作为 LLM 的 few-shot 示例）
+model Template {
+  id            String   @id @default(cuid())
+  track         String   @unique
+  exampleInput  String
+  exampleOutput String
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("templates")
+}

@@ -1,0 +1,81 @@
+@import "tailwindcss";
+
+:root {
+  --background: #030713;
+  --foreground: #ededed;
+  --accent-cyan: #6fe8ff;
+  --accent-blue: #2f7bff;
+  --accent-violet: #a66bff;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+/* 玻璃拟态卡片 */
+.glass {
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* 渐变文字 */
+.gradient-text {
+  background: linear-gradient(135deg, #6fe8ff 0%, #2f7bff 50%, #a66bff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* 渐变按钮 */
+.gradient-btn {
+  background: linear-gradient(135deg, #6fe8ff 0%, #2f7bff 50%, #a66bff 100%);
+  color: #030713;
+  font-weight: 600;
+}
+
+/* 光泽扫过动画 */
+@keyframes shine {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+
+.shine::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  animation: shine 3s ease-in-out infinite;
+}
+
+/* 雷达脉冲动画 */
+@keyframes pulse-ring {
+  0% { transform: scale(0.8); opacity: 0.8; }
+  100% { transform: scale(2); opacity: 0; }
+}
+
+.pulse-ring {
+  animation: pulse-ring 2s ease-out infinite;
+}
+
+/* 淡入动画 */
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in-up {
+  animation: fade-in-up 0.4s ease-out;
+}

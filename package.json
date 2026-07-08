@@ -1,0 +1,49 @@
+{
+  "name": "ideapilot",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "db:migrate": "prisma migrate dev",
+    "db:seed": "prisma db seed",
+    "db:studio": "prisma studio",
+    "db:reset": "prisma migrate reset --force"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
+  "dependencies": {
+    "@ai-sdk/openai": "^4.0.2",
+    "@auth/prisma-adapter": "^2.11.2",
+    "@prisma/client": "^6.19.3",
+    "@react-pdf/renderer": "^4.5.1",
+    "ai": "^7.0.4",
+    "bcryptjs": "^3.0.3",
+    "next": "16.2.9",
+    "next-auth": "^4.24.14",
+    "prisma": "^6.19.3",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "remark": "^15.0.1",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@testing-library/react": "^16.3.2",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.9",
+    "tailwindcss": "^4",
+    "tsx": "^4.22.4",
+    "typescript": "^5",
+    "vitest": "^4.1.9"
+  }
+}
